@@ -2,6 +2,7 @@ FROM python:3.7.0
 
 # Install build dependencies
 RUN apt-get -qq update \
+  && apt install -y netcat net-tools tcpdump \
   && apt-get -y install debconf-utils \
   && pip3 install --upgrade pip \
   && mkdir -p /app

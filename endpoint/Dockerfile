@@ -5,6 +5,7 @@ ARG ENDPOINT_PORT
 
 # Install build dependencies
 RUN apt-get -qq update \
+  && apt install -y netcat net-tools tcpdump \
   && pip3 install --upgrade pip \
   && mkdir -p /app
 

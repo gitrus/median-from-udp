@@ -2,7 +2,7 @@ import logging.handlers
 import os
 from pathlib import Path
 
-ENDPOINT_HOST = '127.0.0.1'
+ENDPOINT_HOST = '0.0.0.0'
 ENDPOINT_PORT = os.environ.get("ENDPOINT_PORT")
 
 REPO_DIR = Path(__file__).parent.parent.parent

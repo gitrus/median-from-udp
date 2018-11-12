@@ -1,5 +1,6 @@
 import random
 import logging
+import struct
 
 logger = logging.getLogger('info_log')
 
@@ -11,7 +12,5 @@ class EchoServerProtocol:
         self.random = random.random()
 
     def datagram_received(self, data, addr):
-        message = data.decode()
+        message = struct.unpack('<f', data)
         logger.info('Received %r from %s' % (message, addr))
-        logger.info('Send %r to %s' % (message, addr))
-        self.transport.sendto(data, addr)

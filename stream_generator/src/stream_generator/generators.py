@@ -1,5 +1,6 @@
 import asyncio
-from typing import Collection, Callable, Generator, Union, NewType
+import struct
+from typing import Collection, Callable, Generator, Union, NewType, Awaitable
 from functools import partial
 
 import numpy as np
@@ -23,7 +24,7 @@ async def delayed_gen(
             await asyncio.sleep(delay)
 
 
-async def stream():
+async def stream(send: Awaitable):
     gen = delayed_gen(
         partial(
             get_sample_gen_by_name('normal'),
@@ -32,7 +33,7 @@ async def stream():
         ),
         0.2
     )
-    for i in range(1000):
-        logger.info(
-            await gen.__anext__()
+    for i in range(10):
+        send(
+            struct.pack('<f', 1.1)
         )

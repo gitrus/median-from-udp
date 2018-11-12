@@ -1,24 +1,23 @@
+import logging
+
+logger = logging.getLogger('inf_log')
+
+
 class EchoClientProtocol:
-    def __init__(self, message, loop):
-        self.message = message
+    def __init__(self, loop):
         self.loop = loop
         self.transport = None
         self.on_con_lost = loop.create_future()
 
     def connection_made(self, transport):
         self.transport = transport
-        print('Send:', self.message)
-        self.transport.sendto(self.message.encode())
 
     def datagram_received(self, data, addr):
-        print("Received:", data.decode())
-
-        print("Close the socket")
-        self.transport.close()
+        logger.info(f"Received: {data.decode()}")
 
     def error_received(self, exc):
-        print('Error received:', exc)
+        logger.error('Error received:', exc)
 
     def connection_lost(self, exc):
-        print("Connection closed")
+        logger.warning("Connection closed")
         self.on_con_lost.set_result(True)
