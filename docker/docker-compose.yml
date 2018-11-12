@@ -1,0 +1,24 @@
+version: '3'
+services:
+  endpoint:
+    build:
+      context: ../endpoint/.
+      args:
+        - ENDPOINT_PORT=600
+    volumes:
+      - ../endpoint:/app
+    environment:
+      ENDPOINT_HOST: ""
+      ENDPOINT_PORT: 600
+    ports:
+      - 6000:600/udp
+
+  stream:
+    build: ../stream_generator/.
+    volumes:
+      - ../stream_generator:/app
+    links:
+      - endpoint
+    environment:
+      ENDPOINT_HOST: "endpoint"
+      ENDPOINT_PORT: 600
