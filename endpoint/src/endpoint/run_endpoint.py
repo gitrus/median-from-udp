@@ -1,6 +1,6 @@
 import asyncio
 
-from .EchoServerProtocol import EchoServerProtocol
+from .MetricsServerProtocol import MetricsServerProtocol
 from .config import ENDPOINT_HOST, ENDPOINT_PORT, setup_logging
 
 logger = setup_logging()
@@ -14,7 +14,7 @@ async def async_main():
     # One protocol instance will be created to serve all
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: EchoServerProtocol(),
+        lambda: MetricsServerProtocol(),
         local_addr=(ENDPOINT_HOST, ENDPOINT_PORT)
     )
 

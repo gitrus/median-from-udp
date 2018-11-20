@@ -7,6 +7,7 @@ from functools import partial
 import numpy as np
 import msgpack
 
+from .utils.codec import encode_msg
 from .distributions import get_sample_gen_by_name
 
 GenValueType = NewType('GenValueType', Union[float, np.float])
@@ -34,7 +35,7 @@ async def stream(send: Awaitable):
         ),
         0.01
     )
-    for i in range(10):
+    for i in range(100):
         send(
             msgpack.packb((1.1, datetime.now()), default=encode_msg, use_bin_type=True)
         )
