@@ -14,6 +14,8 @@ GenValueType = NewType('GenValueType', Union[float, np.float])
 
 logger = logging.getLogger('info_log')
 
+SAMPLE_MIN_SIZE = 20
+
 
 async def delayed_gen(
     sample_fabric: Callable[[int], Collection[GenValueType]],
@@ -21,7 +23,7 @@ async def delayed_gen(
 ) -> Generator[GenValueType, None, None]:
     """Yield numbers from 0 to `to` every `delay` seconds."""
     while True:
-        for v in sample_fabric(20):
+        for v in sample_fabric(SAMPLE_MIN_SIZE):
             yield v
             await asyncio.sleep(delay)
 
@@ -35,7 +37,7 @@ async def stream(send: Awaitable):
         ),
         0.01
     )
-    for i in range(100):
+    async for v in gen:
         send(
-            msgpack.packb((1.1, datetime.now()), default=encode_msg, use_bin_type=True)
+            msgpack.packb((v, datetime.now()), default=encode_msg, use_bin_type=True)
         )

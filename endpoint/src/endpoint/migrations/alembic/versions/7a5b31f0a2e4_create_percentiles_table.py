@@ -19,7 +19,7 @@ depends_on = None
 def upgrade():
     op.create_table(
         'percentiles',
-        sa.Column('percentile_log_date', sa.DateTime, nullable=False, server_default=sa.text('now()')),
+        sa.Column('percentile_log_ts', sa.DateTime, nullable=False, server_default=sa.text('now()')),
         sa.Column('percentile_25', sa.FLOAT, nullable=False),
         sa.Column('percentile_50', sa.FLOAT, nullable=False),
         sa.Column('percentile_75', sa.FLOAT, nullable=False),
