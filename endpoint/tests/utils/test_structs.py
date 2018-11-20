@@ -1,10 +1,30 @@
+from typing import List
+
 import pytest
 
-from endpoint.utils.structs import (
+from endpoint.modules.structs import (
     DLNode,
     DLListIterator,
     DLList,
 )
+
+
+def _assert_order_and_values(dll: DLList, l: List) -> None:
+    current = dll.head
+    i = 0
+    while current is not None:  # prime oreder
+        assert current.val == l[i]
+
+        current = current.next
+        i += 1
+
+    current = dll.tail
+    i -= 1
+    while current is not None:  # reverse oreder
+        assert current.val == l[i]
+
+        current = current.prev
+        i -= 1
 
 
 class TestDLNode:
@@ -85,7 +105,36 @@ class TestDLList:
         iter_ll3 = iter(ll3)
         assert isinstance(iter_ll3, DLListIterator)
         assert iter_ll3.dllist is ll3
-        assert iter_ll3.current is ll3._head
+        assert iter_ll3.current is ll3.head
+
+    def test_dllist_insert_exception(self):
+        ll = DLList(13)
+        ll.push(15)
+
+        with pytest.raises(ValueError):
+            ll.insert(14)
+
+    def test_dllist_insert_before(self):
+        ll = DLList(14)
+        ll.push(16)
+        ll.push(17)
+
+        ll.insert(15, before_node=ll.head.next)
+
+        assert len(ll) == 4
+
+        _assert_order_and_values(ll, [14, 15, 16, 17])
+
+    def test_dllist_insert_after(self):
+        ll = DLList(14)
+        ll.push(15)
+        ll.push(17)
+
+        ll.insert(16, after_node=ll.tail.prev)
+
+        assert len(ll) == 4
+
+        _assert_order_and_values(ll, [14, 15, 16, 17])
 
 
 class TestDLListIterator:
@@ -94,7 +143,7 @@ class TestDLListIterator:
         dlli = DLListIterator(ll)
 
         assert dlli.dllist is ll
-        assert dlli.current is ll._head
+        assert dlli.current is ll.head
 
     def test_dlliter_iter(self):
         ll = DLList(4)

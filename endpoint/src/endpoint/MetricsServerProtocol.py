@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 import msgpack
-from .utils.median import StreamMetrics, StreamValue
+from .modules.median import StreamMetrics, StreamValue
 
 logger = logging.getLogger("info_log")
 

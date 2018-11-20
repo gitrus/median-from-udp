@@ -1,8 +1,11 @@
 import dataclasses
+import logging
 from datetime import datetime
 from typing import Dict, Optional as Opt, TypeVar
 
-from endpoint.utils.structs import DLList
+from endpoint.modules.structs import DLList
+
+logger = logging.getLogger("info_log")
 
 Value = TypeVar('Value')
 
@@ -35,19 +38,19 @@ class PercentileBuffer:
         elif val.value < self.metrics.min:
             self.metrics.min = val.value
 
-    def append(self, val: StreamValue, sequence: int) -> None:
+    def append(self, val: StreamValue, seq: int) -> None:
         sequence_keys = self.store.keys()
         if len(sequence_keys) == self.size:
             sequence_value = min(sequence_keys)
-            if sequence_value - sequence <= self.change_delay:
+            if sequence_value - seq <= self.change_delay:
                 return
 
             del self.store[sequence_value]
 
-        self.store[sequence] = val
+        self.store[seq] = val
         self.set_min_max(val)
 
-    def replace_lifo(self, val: StreamValue, seq: int) -> None:
+    def __replace_lifo(self, val: StreamValue, seq: int) -> None:
         candidate_keys = set(self.store.keys())
         if len(candidate_keys) == 0:
             self.store[seq] = val
@@ -61,6 +64,14 @@ class PercentileBuffer:
         del self.store[rm_key]
 
         self.store[seq] = val
+        self.set_min_max(val)
+
+    def insert(self, val: StreamValue, seq: int) -> None:
+        if self.is_full():
+            self.__replace_lifo(val, seq)
+        else:
+            self.append(val, seq)
+
         self.set_min_max(val)
 
     def is_min_or_max(self, key: int) -> bool:
@@ -92,17 +103,19 @@ class PercentileBuffer:
 
         new_buff.__reasign(
             dict(sorted_buffer_items[:middle_idx]),
-            sorted_buffer_items[0].value,
-            sorted_buffer_items[middle_idx - 1].value
+            sorted_buffer_items[0][1].value,
+            sorted_buffer_items[middle_idx - 1][1].value
         )
         buffer.__reasign(
             dict(sorted_buffer_items[middle_idx:]),
-            sorted_buffer_items[middle_idx].value,
-            sorted_buffer_items[len(sorted_buffer_items) - 1].value
+            sorted_buffer_items[middle_idx][1].value,
+            sorted_buffer_items[len(sorted_buffer_items) - 1][1].value
         )
 
         return new_buff
 
+    def __len__(self) -> int:
+        return len(self.store)
 
 class StreamMetrics:
     """
@@ -121,23 +134,33 @@ class StreamMetrics:
 
     def append(self, val: StreamValue) -> None:
         if self.stream_sequence > 0:
-            if self.buffers._head.val.metrics.min > val.value:
-                self.buffers._head.val.replace_lifo(val)
-            elif self.buffers._tail.val.metrics.max < val.value:
-                self.buffers._tail.val.replace_lifo(val)
+            if self.buffers.head.val.metrics.min > val.value:
+                self.buffers.head.val.insert(val, self.stream_sequence)
+            elif self.buffers.tail.val.metrics.max < val.value:
+                self.buffers.tail.val.insert(val, self.stream_sequence)
 
+            prev_buffer = None
             for buffer in self.buffers:
-                if buffer.metrics.max > val.value > buffer.metrics.min.value:
+                if buffer.metrics.max >= val.value >= buffer.metrics.min:
                     if len(self.buffers) != self.max_number_of_buffer:
                         if not buffer.is_full():
                             buffer.append(val, self.stream_sequence)
                         else:
                             self.split_buffer(buffer)
+                elif prev_buffer and prev_buffer.metrics.max < val.value < buffer.metrics.min:
+                    if len(prev_buffer) <= len(buffer):
+                        prev_buffer.insert(val, self.stream_sequence)
+                    else:
+                        buffer.insert(val, self.stream_sequence)
+                prev_buffer = buffer
 
         else:
-            self.buffers._head.val.append(val, self.stream_sequence)
+            self.buffers.head.val.append(val, self.stream_sequence)
 
         self.stream_sequence += 1
+
+        if self.stream_sequence % 10 == 0:
+            self.current_metrics()
 
     def split_buffer(self, buffer_for_split: PercentileBuffer):
         for buffer_node in self.buffers.iter_over_nodes():
@@ -146,6 +169,9 @@ class StreamMetrics:
                 self.buffers.insert(new_buffer, before_node=buffer_node)
 
     def current_metrics(self):
-        pass
+        for i, buffer in enumerate(self.buffers):
+            logger.info(f"{i} : {buffer.metrics.max}")
+            logger.info(f"{i} : {buffer.metrics.min}")
+            logger.info(f"{i} : {buffer.store.keys()}")
 
 

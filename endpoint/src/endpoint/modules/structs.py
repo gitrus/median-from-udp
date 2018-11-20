@@ -34,8 +34,8 @@ class DLList(Generic[T]):
         else:
             node = DLNode(arg)
 
-        self._head: Opt[DLNode] = node
-        self._tail: Opt[DLNode] = node
+        self.head: Opt[DLNode] = node
+        self.tail: Opt[DLNode] = node
         self.length = 1
 
     def __len__(self) -> int:
@@ -50,27 +50,27 @@ class DLList(Generic[T]):
     def push(self, val: T) -> None:
         node = DLNode(val)
 
-        tail = self._tail
+        tail = self.tail
         if tail is not None:
             tail.next = node
             node.prev = tail
-            self._tail = node
+            self.tail = node
         else:
-            self._tail = node
-            self._head = node
+            self.tail = node
+            self.head = node
 
         self.length += 1
 
     def pop(self) -> T:
-        if self._tail is None:
+        if self.tail is None:
             raise Exception('Nothing to pop')
 
-        popped = self._tail
-        self._tail = popped.prev
+        popped = self.tail
+        self.tail = popped.prev
         popped.extract_from_list()
 
-        if self._tail is None:
-            self._head = None
+        if self.tail is None:
+            self.head = None
 
         self.length -= 1
 
@@ -79,27 +79,27 @@ class DLList(Generic[T]):
     def shift(self, val: T) -> None:
         node = DLNode(val)
 
-        head = self._head
+        head = self.head
         if head is not None:
             head.prev = node
             node.next = head
-            self._head = node
+            self.head = node
         else:
-            self._head = node
-            self._tail = node
+            self.head = node
+            self.tail = node
 
         self.length += 1
 
     def unshift(self) -> T:
-        if self._head is None:
+        if self.head is None:
             raise Exception('Nothing to unshift')
 
-        unshifted = self._head
-        self._head = unshifted.next
+        unshifted = self.head
+        self.head = unshifted.next
         unshifted.extract_from_list()
 
-        if self._head is None:
-            self._tail = None
+        if self.head is None:
+            self.tail = None
 
         self.length -= 1
 
@@ -109,9 +109,9 @@ class DLList(Generic[T]):
         if before_node is None and after_node is None:
             raise ValueError("Before or after node required")
 
-        if before_node is self._head:
+        if before_node is self.head:
             return self.shift(val)
-        elif after_node is self._tail:
+        elif after_node is self.tail:
             return self.push(val)
         else:
             node = DLNode(val)
@@ -136,7 +136,7 @@ class DLList(Generic[T]):
 class DLListIterator:
     def __init__(self, dllist: DLList[T], is_return_node: bool = False) -> None:
         self.dllist = dllist
-        self.current = dllist._head
+        self.current = dllist.head
         self.is_return_node = is_return_node
 
     def __iter__(self) -> 'DLListIterator':
@@ -149,4 +149,4 @@ class DLListIterator:
         r = self.current
         self.current = self.current.next
 
-        return r.val
+        return r if self.is_return_node else r.val
