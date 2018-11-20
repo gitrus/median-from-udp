@@ -26,7 +26,16 @@ class PercentileBuffer:
     metrics: Metrics = Metrics()
     store: Dict[int, StreamValue] = dataclasses.field(default_factory=dict)
 
-    def append(self, value: StreamValue, sequence: int):
+    def set_min_max(self, val: StreamValue) -> None:
+        if self.metrics.max is None:
+            self.metrics.max = val.value
+            self.metrics.min = val.value
+        elif val.value > self.metrics.max:
+            self.metrics.max = val.value
+        elif val.value < self.metrics.min:
+            self.metrics.min = val.value
+
+    def append(self, val: StreamValue, sequence: int) -> None:
         sequence_keys = self.store.keys()
         if len(sequence_keys) == self.size:
             sequence_value = min(sequence_keys)
@@ -35,12 +44,14 @@ class PercentileBuffer:
 
             del self.store[sequence_value]
 
-        self.store[sequence] = value
+        self.store[sequence] = val
+        self.set_min_max(val)
 
-    def replace_lifo(self, s_val: StreamValue, seq: int) -> None:
+    def replace_lifo(self, val: StreamValue, seq: int) -> None:
         candidate_keys = set(self.store.keys())
         if len(candidate_keys) == 0:
-            self.store[seq] = s_val
+            self.store[seq] = val
+            self.set_min_max(val)
 
         rm_key = min(candidate_keys)
         while not self.is_min_or_max(rm_key):
@@ -49,7 +60,8 @@ class PercentileBuffer:
 
         del self.store[rm_key]
 
-        self.store[seq] = s_val
+        self.store[seq] = val
+        self.set_min_max(val)
 
     def is_min_or_max(self, key: int) -> bool:
         return self.store[key].value == self.metrics.max or self.store[key] == self.metrics.min
@@ -98,7 +110,7 @@ class StreamMetrics:
     Inner stream_sequence for delete oldest values and buckets.
 
     """
-    buffer_count = 100
+    max_number_of_buffer = 100
 
     def __init__(self, buffer_size: int = 40, check_time: int = 50) -> None:
         self.buffer_size = buffer_size
@@ -107,23 +119,23 @@ class StreamMetrics:
 
         self.buffers = DLList(PercentileBuffer(buffer_size, buffer_size * 2))
 
-    def append(self, s_val: StreamValue) -> None:
+    def append(self, val: StreamValue) -> None:
         if self.stream_sequence > 0:
-            if self.buffers._head.val.metrics.min > s_val.value:
-                self.buffers._head.val.replace_lifo(s_val)
-            elif self.buffers._tail.val.metrics.max < s_val.value:
-                self.buffers._tail.val.replace_lifo(s_val)
+            if self.buffers._head.val.metrics.min > val.value:
+                self.buffers._head.val.replace_lifo(val)
+            elif self.buffers._tail.val.metrics.max < val.value:
+                self.buffers._tail.val.replace_lifo(val)
 
             for buffer in self.buffers:
-                if buffer.metrics.max > s_val.value > buffer.metrics.min.value:
-                    if len(self.buffers) != self.buffer_count:
+                if buffer.metrics.max > val.value > buffer.metrics.min.value:
+                    if len(self.buffers) != self.max_number_of_buffer:
                         if not buffer.is_full():
-                            buffer.append(s_val, self.stream_sequence)
+                            buffer.append(val, self.stream_sequence)
                         else:
                             self.split_buffer(buffer)
 
         else:
-            self.buffers._head.val.append(s_val, self.stream_sequence)
+            self.buffers._head.val.append(val, self.stream_sequence)
 
         self.stream_sequence += 1
 
