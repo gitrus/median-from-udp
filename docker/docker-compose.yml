@@ -7,8 +7,10 @@ services:
         - ENDPOINT_PORT=600
     volumes:
       - ../endpoint:/app
+    links:
+      - postgres
     environment:
-      ENDPOINT_HOST: ""
+      ENDPOINT_HOST: "0.0.0.0"
       ENDPOINT_PORT: 600
     ports:
       - 6000:600/udp
@@ -22,3 +24,6 @@ services:
     environment:
       ENDPOINT_HOST: "endpoint"
       ENDPOINT_PORT: 600
+
+  postgres:
+    image: "postgres"
