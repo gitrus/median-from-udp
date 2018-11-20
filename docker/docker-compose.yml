@@ -1,6 +1,7 @@
 version: '3'
 services:
   endpoint:
+    container_name: endpoint
     build:
       context: ../endpoint/.
       args:
@@ -16,6 +17,7 @@ services:
       - 6000:600/udp
 
   stream:
+    container_name: stream
     build: ../stream_generator/.
     volumes:
       - ../stream_generator:/app
