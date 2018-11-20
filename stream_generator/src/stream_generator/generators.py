@@ -1,10 +1,11 @@
 import asyncio
-import struct
+import logging
+from datetime import datetime
 from typing import Collection, Callable, Generator, Union, NewType, Awaitable
 from functools import partial
 
 import numpy as np
-import logging
+import msgpack
 
 from .distributions import get_sample_gen_by_name
 
@@ -31,9 +32,9 @@ async def stream(send: Awaitable):
             0.1,
             0.01
         ),
-        0.2
+        0.01
     )
     for i in range(10):
         send(
-            struct.pack('<f', 1.1)
+            msgpack.packb((1.1, datetime.now()), default=encode_msg, use_bin_type=True)
         )
