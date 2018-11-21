@@ -2,8 +2,16 @@ import logging.handlers
 import os
 from pathlib import Path
 
-ENDPOINT_HOST = '0.0.0.0'
+ENDPOINT_HOST = os.environ.get("ENDPOINT_HOST")
 ENDPOINT_PORT = os.environ.get("ENDPOINT_PORT")
+
+PG_HOST = os.environ.get("PG_HOST")
+PG_PORT = os.environ.get("PG_PORT")
+PG_USER = os.environ.get("PG_USER")
+PG_PASSWORD = os.environ.get("PG_PASSWORD")
+
+
+SEQUENCE_DUMP_NUMBER = 100 * 60
 
 REPO_DIR = Path(__file__).parent.parent.parent
 
