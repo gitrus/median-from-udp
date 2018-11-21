@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from typing import Optional as Opt, Generic, TypeVar, Union
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class DLNode(Generic[T]):
     val: T
-    next: Opt['DLNode'] = None
-    prev: Opt['DLNode'] = None
+    next: Opt["DLNode"] = None
+    prev: Opt["DLNode"] = None
 
     def extract_from_list(self):
         prev, next = self.prev, self.next
@@ -21,7 +21,7 @@ class DLNode(Generic[T]):
             next.prev = prev
 
     def __repr__(self) -> str:
-        return f'val: {self.val},  next: {type(self.next)}, prev: {type(self.prev)}'
+        return f"val: {self.val},  next: {type(self.next)}, prev: {type(self.prev)}"
 
 
 class DLList(Generic[T]):
@@ -41,10 +41,10 @@ class DLList(Generic[T]):
     def __len__(self) -> int:
         return self.length
 
-    def __iter__(self) -> 'DLListIterator':
+    def __iter__(self) -> "DLListIterator":
         return DLListIterator(self)
 
-    def iter_over_nodes(self) -> 'DLListIterator':
+    def iter_over_nodes(self) -> "DLListIterator":
         return DLListIterator(self, True)
 
     def push(self, val: T) -> None:
@@ -63,7 +63,7 @@ class DLList(Generic[T]):
 
     def pop(self) -> T:
         if self.tail is None:
-            raise Exception('Nothing to pop')
+            raise Exception("Nothing to pop")
 
         popped = self.tail
         self.tail = popped.prev
@@ -92,7 +92,7 @@ class DLList(Generic[T]):
 
     def unshift(self) -> T:
         if self.head is None:
-            raise Exception('Nothing to unshift')
+            raise Exception("Nothing to unshift")
 
         unshifted = self.head
         self.head = unshifted.next
@@ -139,7 +139,7 @@ class DLListIterator:
         self.current = dllist.head
         self.is_return_node = is_return_node
 
-    def __iter__(self) -> 'DLListIterator':
+    def __iter__(self) -> "DLListIterator":
         return self
 
     def __next__(self) -> T:

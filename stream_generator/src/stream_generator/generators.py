@@ -32,11 +32,12 @@ async def stream(send: Awaitable):
     gen = delayed_gen(
         partial(
             get_sample_gen_by_name('normal'),
-            0.1,
-            0.01
+            1,
+            3
         ),
         0.01
     )
+
     async for v in gen:
         send(
             msgpack.packb((v, datetime.now()), default=encode_msg, use_bin_type=True)

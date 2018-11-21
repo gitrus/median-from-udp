@@ -5,7 +5,7 @@ from pathlib import Path
 
 HERE = Path(__file__).parent.resolve()
 
-__INIT_PY__ = HERE.joinpath('src/endpoint/__init__.py')
+__INIT_PY__ = HERE.joinpath("src/endpoint/__init__.py")
 
 
 def find_version():
@@ -16,18 +16,18 @@ def find_version():
         if version_match:
             return version_match.group(1)
         else:
-            raise RuntimeError(f'Unable to find __version__ string in {__INIT_PY__}!')
+            raise RuntimeError(f"Unable to find __version__ string in {__INIT_PY__}!")
 
 
 setup(
-    name='enpoint',
+    name="endpoint",
     version=find_version(),
-    packages=find_packages(where='src'),
+    packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
-    python_requires='>=3.7',
+    python_requires=">=3.7",
     entry_points="""
         [console_scripts]
         run_endpoint=endpoint.run_endpoint:main
-    """
+    """,
 )

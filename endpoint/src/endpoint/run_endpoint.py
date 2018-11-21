@@ -1,7 +1,16 @@
 import asyncio
+import asyncpg
 
-from .MetricsServerProtocol import MetricsServerProtocol
-from .config import ENDPOINT_HOST, ENDPOINT_PORT, setup_logging
+from .metrics_server_protocol import MetricsServerProtocol
+from .config import (
+    setup_logging,
+    ENDPOINT_HOST,
+    ENDPOINT_PORT,
+    PG_HOST,
+    PG_PORT,
+    PG_USER,
+    PG_PASSWORD,
+)
 
 logger = setup_logging()
 
@@ -11,11 +20,11 @@ async def async_main():
 
     loop = asyncio.get_running_loop()
 
-    # One protocol instance will be created to serve all
-    # client requests.
+    conn = await asyncpg.connect(
+        host=PG_HOST, port=PG_PORT, user=PG_USER, password=PG_PASSWORD
+    )
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: MetricsServerProtocol(),
-        local_addr=(ENDPOINT_HOST, ENDPOINT_PORT)
+        lambda: MetricsServerProtocol(conn), local_addr=(ENDPOINT_HOST, ENDPOINT_PORT)
     )
 
     try:
@@ -25,6 +34,4 @@ async def async_main():
 
 
 def main() -> None:
-    asyncio.run(
-        async_main()
-    )
+    asyncio.run(async_main())

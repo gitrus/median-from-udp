@@ -1,19 +1,30 @@
 import dataclasses
 import logging
 from datetime import datetime
-from typing import Dict, Optional as Opt, TypeVar
+from typing import Dict, Optional as Opt, TypeVar, Union
 
 from endpoint.modules.structs import DLList
 
 logger = logging.getLogger("info_log")
 
-Value = TypeVar('Value')
+Value = TypeVar("Value")
+
+EPSILON = 0.0001
 
 
 @dataclasses.dataclass(frozen=True)
 class StreamValue:
-    value: int
+    value: float
     date: datetime
+
+    def __lt__(self, other: "StreamValue") -> bool:
+        return self.value < other.value
+
+    def __gt__(self, other: "StreamValue") -> bool:
+        return other.__lt__(self)
+
+    def __eq__(self, other: "StreamValue"):
+        return self.value - other.value <= 0.0001
 
 
 @dataclasses.dataclass
@@ -26,7 +37,7 @@ class Metrics:
 class PercentileBuffer:
     size: int
     change_delay: int
-    metrics: Metrics = Metrics()
+    metrics: Metrics = dataclasses.field(default_factory=Metrics)
     store: Dict[int, StreamValue] = dataclasses.field(default_factory=dict)
 
     def set_min_max(self, val: StreamValue) -> None:
@@ -75,7 +86,10 @@ class PercentileBuffer:
         self.set_min_max(val)
 
     def is_min_or_max(self, key: int) -> bool:
-        return self.store[key].value == self.metrics.max or self.store[key] == self.metrics.min
+        return (
+            self.store[key].value == self.metrics.max
+            or self.store[key].value == self.metrics.min
+        )
 
     def max_sequence(self) -> int:
         return max(self.store.keys())
@@ -89,27 +103,21 @@ class PercentileBuffer:
         self.metrics.max = max
 
     @classmethod
-    def split_buffer(cls, buffer: 'PercentileBuffer') -> 'PercentileBuffer':
-        new_buff = cls(
-            size=buffer.size,
-            change_delay=buffer.change_delay,
-        )
+    def split_buffer(cls, buffer: "PercentileBuffer") -> "PercentileBuffer":
+        new_buff = cls(size=buffer.size, change_delay=buffer.change_delay)
 
-        sorted_buffer_items = sorted(
-            buffer.store.items(),
-            key=lambda x: x[1].value,
-        )
+        sorted_buffer_items = sorted(buffer.store.items(), key=lambda x: x[1].value)
         middle_idx = len(sorted_buffer_items) // 2
 
         new_buff.__reasign(
             dict(sorted_buffer_items[:middle_idx]),
             sorted_buffer_items[0][1].value,
-            sorted_buffer_items[middle_idx - 1][1].value
+            sorted_buffer_items[middle_idx - 1][1].value,
         )
         buffer.__reasign(
             dict(sorted_buffer_items[middle_idx:]),
             sorted_buffer_items[middle_idx][1].value,
-            sorted_buffer_items[len(sorted_buffer_items) - 1][1].value
+            sorted_buffer_items[len(sorted_buffer_items) - 1][1].value,
         )
 
         return new_buff
@@ -117,12 +125,14 @@ class PercentileBuffer:
     def __len__(self) -> int:
         return len(self.store)
 
+
 class StreamMetrics:
     """
     Stream metrics has 100 buckets for storing values (percentiles)
     Inner stream_sequence for delete oldest values and buckets.
 
     """
+
     max_number_of_buffer = 100
 
     def __init__(self, buffer_size: int = 40, check_time: int = 50) -> None:
@@ -147,7 +157,10 @@ class StreamMetrics:
                             buffer.append(val, self.stream_sequence)
                         else:
                             self.split_buffer(buffer)
-                elif prev_buffer and prev_buffer.metrics.max < val.value < buffer.metrics.min:
+                elif (
+                    prev_buffer
+                    and prev_buffer.metrics.max < val.value < buffer.metrics.min
+                ):
                     if len(prev_buffer) <= len(buffer):
                         prev_buffer.insert(val, self.stream_sequence)
                     else:
@@ -159,19 +172,25 @@ class StreamMetrics:
 
         self.stream_sequence += 1
 
-        if self.stream_sequence % 10 == 0:
-            self.current_metrics()
-
-    def split_buffer(self, buffer_for_split: PercentileBuffer):
+    def split_buffer(self, buffer_for_split: PercentileBuffer) -> None:
         for buffer_node in self.buffers.iter_over_nodes():
             if buffer_node.val == buffer_for_split:
-                new_buffer = buffer_for_split.split_buffer(buffer_for_split)
-                self.buffers.insert(new_buffer, before_node=buffer_node)
+                node = buffer_node
 
-    def current_metrics(self):
+        new_buffer = buffer_for_split.split_buffer(buffer_for_split)
+        self.buffers.insert(new_buffer, before_node=node)
+
+    def current_metrics(self) -> Dict[int, Union[int, float]]:
+        if self.stream_sequence < self.max_number_of_buffer * self.buffer_size:
+            raise Exception("Not enough data")
+
+        percentiles = {}
         for i, buffer in enumerate(self.buffers):
-            logger.info(f"{i} : {buffer.metrics.max}")
-            logger.info(f"{i} : {buffer.metrics.min}")
-            logger.info(f"{i} : {buffer.store.keys()}")
+            if i == 24:
+                percentiles[25] = buffer.metrics.max
+            elif i == 49:
+                percentiles[50] = buffer.metrics.max
+            elif i == 74:
+                percentiles[75] = buffer.metrics.max
 
-
+        return percentiles

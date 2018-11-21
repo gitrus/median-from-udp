@@ -2,11 +2,7 @@ from typing import List
 
 import pytest
 
-from endpoint.modules.structs import (
-    DLNode,
-    DLListIterator,
-    DLList,
-)
+from endpoint.modules.structs import DLNode, DLListIterator, DLList
 
 
 def _assert_order_and_values(dll: DLList, l: List) -> None:
@@ -73,11 +69,11 @@ class TestDLList:
             ll.unshift()
 
     def test_dllist_len(self):
-        ll = DLList((1,2))
+        ll = DLList((1, 2))
         assert len(ll) == 1
-        ll.shift((2,3))
+        ll.shift((2, 3))
         assert len(ll) == 2
-        ll.push((3,4))
+        ll.push((3, 4))
         assert len(ll) == 3
 
         ll.pop()
@@ -153,13 +149,13 @@ class TestDLListIterator:
         assert dlli.__next__() is ll.unshift()
 
     def test_dlliter_for(self):
-        ll = DLList('4')
-        ll.push('2')
+        ll = DLList("4")
+        ll.push("2")
 
         ll_iter = iter(ll)
 
         for i in ll_iter:
-            assert i == '4' or i == '2'
+            assert i == "4" or i == "2"
 
         with pytest.raises(StopIteration):
             next(ll_iter)
