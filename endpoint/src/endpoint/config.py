@@ -11,7 +11,7 @@ PG_USER = os.environ.get("PG_USER")
 PG_PASSWORD = os.environ.get("PG_PASSWORD")
 
 
-SEQUENCE_DUMP_NUMBER = 100 * 60
+SEQUENCE_DUMP_NUMBER = 100 * 60 * 5  # ~ once per 5 minutes
 
 REPO_DIR = Path(__file__).parent.parent.parent
 
