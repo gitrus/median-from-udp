@@ -1,9 +1,10 @@
 import logging
+from asyncio import DatagramProtocol
 
 logger = logging.getLogger('inf_log')
 
 
-class EchoClientProtocol:
+class StreamProtocol(DatagramProtocol):
     def __init__(self, loop):
         self.loop = loop
         self.transport = None

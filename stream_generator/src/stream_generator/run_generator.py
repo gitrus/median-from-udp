@@ -2,7 +2,7 @@ import asyncio
 import asyncio.selector_events
 import click
 
-from .EchoClientProtocol import EchoClientProtocol
+from .stream_protocol import StreamProtocol
 from .generators import stream
 
 from .config import (
@@ -18,7 +18,7 @@ async def async_main():
     loop = asyncio.get_event_loop()
 
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: EchoClientProtocol(loop),
+        lambda: StreamProtocol(loop),
         remote_addr=(ENDPOINT_HOST, ENDPOINT_PORT)
     )
 
