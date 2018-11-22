@@ -1,7 +1,7 @@
 version: '3'
 services:
   endpoint:
-    container_name: endpoint
+    container_name: "endpoint"
     build:
       context: ../endpoint/.
       args:
@@ -12,17 +12,17 @@ services:
       - postgres
     environment:
       ENDPOINT_HOST: "0.0.0.0"
-      ENDPOINT_PORT: 600
+      ENDPOINT_PORT: "600"
 
       PG_HOST: "postgres"
-      PG_PORT: 5432
+      PG_PORT: "5432"
       PG_USER: "postgres"
       PG_PASSWORD: "postgres"
     ports:
-      - 6000:600/udp
+      - "6000:600/udp"
 
   stream:
-    container_name: stream
+    container_name: "stream"
     build: ../stream_generator/.
     volumes:
       - ../stream_generator:/app
@@ -30,7 +30,8 @@ services:
       - endpoint
     environment:
       ENDPOINT_HOST: "endpoint"
-      ENDPOINT_PORT: 600
+      ENDPOINT_PORT: "600"
 
   postgres:
+    container_name: "postgres"
     image: "postgres"
