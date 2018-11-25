@@ -35,7 +35,7 @@ async def stream(send: Awaitable):
             1,
             3
         ),
-        0.01
+        0.001
     )
 
     async for v in gen:

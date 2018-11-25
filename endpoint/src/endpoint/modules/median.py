@@ -9,22 +9,21 @@ logger = logging.getLogger("info_log")
 
 Value = TypeVar("Value")
 
-EPSILON = 0.0001
-
 
 @dataclasses.dataclass(frozen=True)
 class StreamValue:
     value: float
     date: datetime
+    __EPSILON: int = 0.0001
 
     def __lt__(self, other: "StreamValue") -> bool:
-        return self.value < other.value
+        return self.value - other.value > self.__EPSILON
 
     def __gt__(self, other: "StreamValue") -> bool:
         return other.__lt__(self)
 
     def __eq__(self, other: "StreamValue"):
-        return self.value - other.value <= 0.0001
+        return abs(self.value - other.value) < self.__EPSILON
 
 
 @dataclasses.dataclass
