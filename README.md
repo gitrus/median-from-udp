@@ -10,5 +10,6 @@ docker exec stream run_stream_generator
 ```
 
 ## In repo:
-- endpoint (receive stream)
-- stream generator (generate random number and send it with some delay)
+- endpoint (receive UDP stream)
+- stream generator (generate random number and send it with some delay by UDP)
+- postgresql for storing values

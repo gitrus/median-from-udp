@@ -15,6 +15,10 @@ logger = logging.getLogger("info_log")
 
 
 class MetricsServerProtocol(DatagramProtocol):
+    """
+    UDP protocol with StreamMetrics accumulator for calculate 25, 50 ,75 percentiles from stream.
+    We assume that input datagram will be determined type (msgpack(float, iso_date)).
+    """
     def __init__(self, connection: APGConnection) -> None:
         self.stream = StreamMetrics()
         self.pg_connection = connection
