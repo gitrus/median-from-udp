@@ -10,20 +10,35 @@ logger = logging.getLogger("info_log")
 Value = TypeVar("Value")
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(frozen=True, eq=False)
 class StreamValue:
     value: float
     date: datetime
-    __EPSILON: int = 0.0001
+    __EPSILON = 0.0001
+
+    @staticmethod
+    def __get_value(container: Union["StreamValue", int, float]) -> Union[float, int]:
+        if isinstance(container, StreamValue):
+            return container.value
+        elif isinstance(container, (float, int)):
+            return container
+        else:
+            raise TypeError(f"Comparing is not implemented for {type(container)}")
 
     def __lt__(self, other: "StreamValue") -> bool:
-        return self.value - other.value > self.__EPSILON
+        v2 = self.__get_value(other)
+
+        return v2 - self.value >= self.__EPSILON
 
     def __gt__(self, other: "StreamValue") -> bool:
-        return other.__lt__(self)
+        v2 = self.__get_value(other)
 
-    def __eq__(self, other: "StreamValue"):
-        return abs(self.value - other.value) < self.__EPSILON
+        return self.value - v2 >= self.__EPSILON
+
+    def __eq__(self, other: Union["StreamValue", float, int]) -> bool:
+        v2 = self.__get_value(other)
+
+        return abs(self.value - v2) < self.__EPSILON
 
 
 @dataclasses.dataclass
@@ -43,9 +58,9 @@ class PercentileBuffer:
         if self.metrics.max is None:
             self.metrics.max = val.value
             self.metrics.min = val.value
-        elif val.value > self.metrics.max:
+        elif val > self.metrics.max:
             self.metrics.max = val.value
-        elif val.value < self.metrics.min:
+        elif val < self.metrics.min:
             self.metrics.min = val.value
 
     def append(self, val: StreamValue, seq: int) -> None:

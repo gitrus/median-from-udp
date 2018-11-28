@@ -10,7 +10,7 @@ class DLNode(Generic[T]):
     next: Opt["DLNode"] = None
     prev: Opt["DLNode"] = None
 
-    def extract_from_list(self):
+    def extract_from_list(self) -> None:
         prev, next = self.prev, self.next
 
         self.prev, self.next = None, None
@@ -36,10 +36,10 @@ class DLList(Generic[T]):
 
         self.head: Opt[DLNode] = node
         self.tail: Opt[DLNode] = node
-        self.length = 1
+        self.__length = 1
 
     def __len__(self) -> int:
-        return self.length
+        return self.__length
 
     def __iter__(self) -> "DLListIterator":
         return DLListIterator(self)
@@ -59,7 +59,7 @@ class DLList(Generic[T]):
             self.tail = node
             self.head = node
 
-        self.length += 1
+        self.__length += 1
 
     def pop(self) -> T:
         if self.tail is None:
@@ -72,7 +72,7 @@ class DLList(Generic[T]):
         if self.tail is None:
             self.head = None
 
-        self.length -= 1
+        self.__length -= 1
 
         return popped.val
 
@@ -88,7 +88,7 @@ class DLList(Generic[T]):
             self.head = node
             self.tail = node
 
-        self.length += 1
+        self.__length += 1
 
     def unshift(self) -> T:
         if self.head is None:
@@ -101,7 +101,7 @@ class DLList(Generic[T]):
         if self.head is None:
             self.tail = None
 
-        self.length -= 1
+        self.__length -= 1
 
         return unshifted.val
 
@@ -130,7 +130,7 @@ class DLList(Generic[T]):
 
                 after_node.next = node
 
-            self.length += 1
+            self.__length += 1
 
 
 class DLListIterator:
