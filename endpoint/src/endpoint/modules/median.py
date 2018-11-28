@@ -66,11 +66,11 @@ class PercentileBuffer:
     def append(self, val: StreamValue, seq: int) -> None:
         sequence_keys = self.store.keys()
         if len(sequence_keys) == self.size:
-            sequence_value = min(sequence_keys)
-            if sequence_value - seq <= self.change_delay:
+            min_sequence_value = min(sequence_keys)
+            if seq - min_sequence_value <= self.change_delay:
                 return
 
-            del self.store[sequence_value]
+            del self.store[min_sequence_value]
 
         self.store[seq] = val
         self.set_min_max(val)
