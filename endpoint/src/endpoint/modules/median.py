@@ -116,11 +116,10 @@ class PercentileBuffer:
         self.metrics.min = min
         self.metrics.max = max
 
-    @classmethod
-    def split_buffer(cls, buffer: "PercentileBuffer") -> "PercentileBuffer":
-        new_buff = cls(size=buffer.size, change_delay=buffer.change_delay)
+    def split_buffer(self) -> "PercentileBuffer":
+        new_buff = self.__class__(size=self.size, change_delay=self.change_delay)
 
-        sorted_buffer_items = sorted(buffer.store.items(), key=lambda x: x[1].value)
+        sorted_buffer_items = sorted(self.store.items(), key=lambda x: x[1].value)
         middle_idx = len(sorted_buffer_items) // 2
 
         new_buff.__reasign(
@@ -128,7 +127,7 @@ class PercentileBuffer:
             sorted_buffer_items[0][1].value,
             sorted_buffer_items[middle_idx - 1][1].value,
         )
-        buffer.__reasign(
+        self.__reasign(
             dict(sorted_buffer_items[middle_idx:]),
             sorted_buffer_items[middle_idx][1].value,
             sorted_buffer_items[len(sorted_buffer_items) - 1][1].value,
@@ -191,7 +190,7 @@ class StreamMetrics:
             if buffer_node.val == buffer_for_split:
                 node = buffer_node
 
-        new_buffer = buffer_for_split.split_buffer(buffer_for_split)
+        new_buffer = buffer_for_split.split_buffer()
         self.buffers.insert(new_buffer, before_node=node)
 
     def current_metrics(self) -> Dict[int, Union[int, float]]:
