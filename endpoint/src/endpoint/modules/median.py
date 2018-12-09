@@ -46,6 +46,9 @@ class Metrics:
     min: Opt[Value] = None
     max: Opt[Value] = None
 
+    def __contains__(self, item: Union[int, float]) -> bool:
+        return self.min <= item <= self.max
+
 
 @dataclasses.dataclass
 class PercentileBuffer:
@@ -111,7 +114,7 @@ class PercentileBuffer:
     def is_full(self) -> bool:
         return len(self.store.keys()) == self.size
 
-    def __reasign(self, store: Dict[int, StreamValue], min: Value, max: Value):
+    def __reasign(self, store: Dict[int, StreamValue], min: Value, max: Value) -> None:
         self.store = store.copy()
         self.metrics.min = min
         self.metrics.max = max
@@ -141,11 +144,9 @@ class PercentileBuffer:
 
 class StreamMetrics:
     """
-    Stream metrics has 100 buckets for storing values (percentiles)
+    Stream metrics has 100 buckets for storing values (percentiles).
     Inner stream_sequence for delete oldest values and buckets.
-
     """
-
     max_number_of_buffer = 100
 
     def __init__(self, buffer_size: int = 40, check_time: int = 50) -> None:
@@ -164,7 +165,7 @@ class StreamMetrics:
 
             prev_buffer = None
             for buffer in self.buffers:
-                if buffer.metrics.max >= val.value >= buffer.metrics.min:
+                if val.value in buffer.metrics:
                     if len(self.buffers) != self.max_number_of_buffer:
                         if not buffer.is_full():
                             buffer.append(val, self.stream_sequence)
@@ -186,12 +187,24 @@ class StreamMetrics:
         self.stream_sequence += 1
 
     def split_buffer(self, buffer_for_split: PercentileBuffer) -> None:
-        for buffer_node in self.buffers.iter_over_nodes():
-            if buffer_node.val == buffer_for_split:
-                node = buffer_node
+        node = [
+            b
+            for b in self.buffers.iter_over_nodes()
+            if b.val == buffer_for_split
+        ][0]
 
         new_buffer = buffer_for_split.split_buffer()
         self.buffers.insert(new_buffer, before_node=node)
+
+    def rebuild(self) -> None:
+        buffer_to_number = {buffer: i for i, buffer in enumerate(self.buffers)}
+        seq_to_buffer = {buffer.max_sequence(): buffer for buffer in self.buffers}
+
+        split_candidate_buffer = seq_to_buffer[max(seq_to_buffer.keys())]
+        merge_candidate_buffer = seq_to_buffer[min(seq_to_buffer.keys())]
+
+        if buffer_to_number[split_candidate_buffer] - buffer_to_number[merge_candidate_buffer] < 2:
+            pass
 
     def current_metrics(self) -> Dict[int, Union[int, float]]:
         if self.stream_sequence < self.max_number_of_buffer * self.buffer_size:

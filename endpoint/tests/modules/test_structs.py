@@ -2,13 +2,13 @@ from typing import List
 
 import pytest
 
-from endpoint.modules.structs import DLNode, DLListIterator, DLList
+from endpoint.modules.structs import DLNode, DLList
 
 
 def _assert_order_and_values(dll: DLList, l: List) -> None:
     current = dll.head
     i = 0
-    while current is not None:  # prime oreder
+    while current is not None:  # prime order
         assert current.val == l[i]
 
         current = current.next
@@ -16,7 +16,7 @@ def _assert_order_and_values(dll: DLList, l: List) -> None:
 
     current = dll.tail
     i -= 1
-    while current is not None:  # reverse oreder
+    while current is not None:  # reverse order
         assert current.val == l[i]
 
         current = current.prev
@@ -96,13 +96,6 @@ class TestDLList:
         with pytest.raises(Exception):
             ll3.pop()
 
-    def test_dllist_iter(self):
-        ll3 = DLList(13)
-        iter_ll3 = iter(ll3)
-        assert isinstance(iter_ll3, DLListIterator)
-        assert iter_ll3.dllist is ll3
-        assert iter_ll3.current is ll3.head
-
     def test_dllist_insert_exception(self):
         ll = DLList(13)
         ll.push(15)
@@ -132,23 +125,13 @@ class TestDLList:
 
         _assert_order_and_values(ll, [14, 15, 16, 17])
 
-
-class TestDLListIterator:
-    def test_dlliter_init(self):
+    def test_dllist_iter(self):
         ll = DLList(4)
-        dlli = DLListIterator(ll)
+        dlli = iter(ll)
 
-        assert dlli.dllist is ll
-        assert dlli.current is ll.head
-
-    def test_dlliter_iter(self):
-        ll = DLList(4)
-        dlli = DLListIterator(ll)
-
-        assert dlli.__iter__() is dlli
         assert dlli.__next__() is ll.unshift()
 
-    def test_dlliter_for(self):
+    def test_dllist_for(self):
         ll = DLList("4")
         ll.push("2")
 

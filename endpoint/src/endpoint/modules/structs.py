@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional as Opt, Generic, TypeVar, Union
+from typing import Optional as Opt, Generic, TypeVar, Union, Generator
+from collections.abc import Collection
 
 T = TypeVar("T")
 
@@ -10,21 +11,21 @@ class DLNode(Generic[T]):
     next: Opt["DLNode"] = None
     prev: Opt["DLNode"] = None
 
+    def __repr__(self) -> str:
+        return f"val: {self.val},  next: {type(self.next)}, prev: {type(self.prev)}"
+
     def extract_from_list(self) -> None:
-        prev, next = self.prev, self.next
+        prev, next_ = self.prev, self.next
 
         self.prev, self.next = None, None
 
         if prev is not None:
-            prev.next = next
-        if next is not None:
-            next.prev = prev
-
-    def __repr__(self) -> str:
-        return f"val: {self.val},  next: {type(self.next)}, prev: {type(self.prev)}"
+            prev.next = next_
+        if next_ is not None:
+            next_.prev = prev
 
 
-class DLList(Generic[T]):
+class DLList(Collection, Generic[T]):
     def __init__(self, arg: Union[DLNode, T]) -> None:
         if isinstance(arg, DLNode):
             if arg.next is not None or arg.prev is not None:
@@ -41,11 +42,26 @@ class DLList(Generic[T]):
     def __len__(self) -> int:
         return self.__length
 
-    def __iter__(self) -> "DLListIterator":
-        return DLListIterator(self)
+    def __contains__(self, item: T) -> bool:
+        cur = self.head
+        for _ in range(self.__length):
+            if cur.val == item:
+                return True
+            cur = cur.next
 
-    def iter_over_nodes(self) -> "DLListIterator":
-        return DLListIterator(self, True)
+        return False
+
+    def __iter__(self) -> Generator:
+        cur = self.head
+        for _ in range(self.__length):
+            yield cur.val
+            cur = cur.next
+
+    def iter_over_nodes(self) -> Generator:
+        cur = self.head
+        for _ in range(self.__length):
+            yield cur
+            cur = cur.next
 
     def push(self, val: T) -> None:
         node = DLNode(val)
@@ -105,9 +121,11 @@ class DLList(Generic[T]):
 
         return unshifted.val
 
-    def insert(self, val: T, before_node: DLNode = None, after_node: DLNode = None):
+    def insert(self, val: T, before_node: DLNode = None, after_node: DLNode = None) -> None:
         if before_node is None and after_node is None:
-            raise ValueError("Before or after node required")
+            raise ValueError("Before xor after node required")
+        if before_node is not None and after_node is not None:
+            raise ValueError("Before xor after node required, but XOR.")
 
         if before_node is self.head:
             return self.shift(val)
@@ -132,21 +150,3 @@ class DLList(Generic[T]):
 
             self.__length += 1
 
-
-class DLListIterator:
-    def __init__(self, dllist: DLList[T], is_return_node: bool = False) -> None:
-        self.dllist = dllist
-        self.current = dllist.head
-        self.is_return_node = is_return_node
-
-    def __iter__(self) -> "DLListIterator":
-        return self
-
-    def __next__(self) -> T:
-        if self.current is None:
-            raise StopIteration()
-
-        r = self.current
-        self.current = self.current.next
-
-        return r if self.is_return_node else r.val
